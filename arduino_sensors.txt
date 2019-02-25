@@ -1,0 +1,80 @@
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+#define DHTPIN            7
+#define DHTTYPE           DHT11
+
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
+int ldr1 = A0;
+int ldr2 = A1;
+int ldr3 = A2;
+int intensity1;
+int intensity2;
+int intensity3;
+int soundPin = 13;
+int soundOut;
+
+void setup() {
+	Serial.begin(9600);
+	dht.begin();
+	pinMode(ldr1, INPUT);
+	pinMode(ldr2, INPUT);
+	pinMode(ldr3, INPUT);
+	pinMode(soundPin, INPUT);
+}
+
+void loop() {
+	String input = "";
+	while (Serial.available() > 0) {
+	input += (char) Serial.read();
+	delay(5);
+	}
+	if(input=="t"){
+		sensors_event_t event;
+		dht.temperature().getEvent(&event);
+	if (isnan(event.temperature)) {
+		Serial.println("Error reading temperature!");
+		}
+	else {
+	Serial.println(event.temperature);
+		}
+	}
+	else if(input=="h"){
+		sensors_event_t event;
+		dht.humidity().getEvent(&event);
+	if (isnan(event.relative_humidity)) {
+		Serial.println("Error reading humidity!");
+		}
+	else {
+		Serial.println(event.relative_humidity);
+		}
+	}
+
+	else if(input=="l1"){
+		intensity1 = analogRead(ldr1);
+		float volts1 = intensity1 * 0.0048828125;
+		int lux1=500/(10*((5-volts1)/volts1));
+		Serial.println(int(lux1));
+	}
+
+	else if(input=="l2"){
+		intensity2 = analogRead(ldr2);
+		float volts2 = intensity2 * 0.0048828125;
+		int lux2=500/(10*((5-volts2)/volts2));
+		Serial.println(int(lux2));
+	}
+
+	else if(input=="l3"){
+		intensity3 = analogRead(ldr3);
+		float volts3 = intensity3 * 0.0048828125;
+		int lux3=500/(10*((5-volts3)/volts3));
+		Serial.println(int(lux3));
+	}
+
+soundOut = digitalRead(soundPin);
+if(soundOut == HIGH){
+	Serial.println("cry");
+	delay(1000);
+	}
+}

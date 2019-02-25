@@ -1,0 +1,134 @@
+import telepot
+import serial
+import time
+import apscheduler
+from apscheduler.schedulers.background 
+import BackgroundScheduler
+import logging
+logging.basicConfig()
+import os
+import sys
+
+ser=serial.Serial('/dev/ttyACM0',9600)
+
+def restart_program():
+	python = sys.executable
+	os.execl(python, python, *sys.argv)
+
+def condition(chat_id):
+	check = ser.readline()
+	if "cry" in check:
+		bot.sendMessage(chat_id,"The baby is crying. Alarm!")
+		ser.flushInput()
+		ser.flushOutput()
+	else:
+		bot.sendMessage(chat_id, " The error has ocurred. The app will be restarted in few seconds. Please restore the monitor mode!")
+		ser.flushInput()
+		ser.flushOutput()
+		restart_program()
+		
+
+sched=BackgroundScheduler()
+sched.start()
+
+def handle(msg):
+	content_type, chat_type, chat_id = telepot.glance(msg)
+	chat_id = msg['chat']['id']
+	command = msg['text']
+	if command == '/start':
+		time.sleep(1)
+		bot.sendMessage(chat_id, 'Hello, this is Sa\'Bi bot!')
+	elif command == '/check':
+		message=""
+		ser.flushInput()
+		ser.flushOutput()
+		ser.write('t')
+		temp = "Temperature: " + ser.readline() + u"\u2103 \n "
+		ser.flushInput()
+		ser.flushOutput()
+		message=message+temp
+		ser.flushInput()
+		ser.flushOutput()
+		ser.write('h')
+		hum = "Humidity: " + ser.readline() + "% \n"
+		ser.flushInput()
+		ser.flushOutput()
+		message = message + hum
+		ser.flushInput()
+		ser.flushOutput()
+		ser.write('l1')
+		light1 = "Light intensity (Side 1): " + ser.readline() + " Lux \n"
+		ser.flushInput()
+		ser.flushOutput()
+		message = message + light1
+		ser.flushInput()
+		ser.flushOutput()
+		ser.write('l2')
+		light2 = "Light intensity (Side 2): " + ser.readline() + " Lux \n"
+		ser.flushInput()
+		ser.flushOutput()
+		message = message + light2
+		ser.flushInput()
+		ser.flushOutput()
+		ser.write('l3')
+		light3 = "Light intensity (Side 3): " + ser.readline() + " Lux \n"
+		ser.flushInput()
+		ser.flushOutput()
+		message = message + light3
+		bot.sendMessage(chat_id, message)			
+
+	elif command == '/monitor':
+		sched.add_job(condition, 'interval', [chat_id], seconds=20, max_instances=1000, id = '123')
+	elif command == '/stop':
+		try:
+			sched.remove_job('123')
+			ser.flushInput()
+			ser.flushOutput()
+		except:
+			bot.sendMessage(chat_id, "The monitor 
+mode was not started!")
+	elif command == '/recommend':
+		message = ""
+		ser.flushInput()
+		ser.flushOutput()
+		ser.write('t')
+		temp = ser.readline()
+		ser.flushInput()
+		ser.flushOutput()
+		if (float(temp)<21):
+			tdifference = 21 - float(temp)
+			message = message + "The temperature is %d C below normal\n\n"%tdifference
+		elif (float(temp)>24):
+			tdifference = float(temp) - 24
+			message = message + "The temperature is %d C above normal\n\n"%tdifference
+		else:
+			message = message + "Temperature conditions are satisfied\n\n"
+		ser.flushInput()
+		ser.flushOutput()
+		ser.write('h')
+		hum = ser.readline()
+		ser.flushInput()
+		ser.flushOutput()
+		if (float(hum) < 40):
+			hdifference = 40 - float(hum)
+			message = message + "The humidity is %d per cent below normal\n"%hdifference
+		elif (float(hum) > 60):
+			hdifference = float(hum) - 60
+			message = message + "The humidity is %d per cent above normal\n"%hdifference
+		else:
+			message = message + "Humidity conditions are satisfied\n"
+			bot.sendMessage(chat_id, message)
+		
+	else:
+		bot.sendMessage(chat_id,'Wrong command')
+	
+bot = telepot.Bot('539401906:
+AAE5a7LY5ghahSx-jMRjDVVgpgQ4Sr58TMM')
+chat_id = bot.message_loop(handle)
+print 'Bot for sa\'bi baby care system.'
+
+while 1:
+time.sleep(10)
+
+#Username:the_sabi_bot
+#Token:539401906:AAE5a7LY5ghahSx-jMRjDVVgpgQ4Sr58TMM
